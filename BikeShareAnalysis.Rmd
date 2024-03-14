@@ -13,7 +13,7 @@ library(readr)
 ```
 
 
-reading CSV
+Reading CSV files into dataframes
 ```{r readCSV}
 Data202303 <- read_csv('csv_files/202303-divvy-tripdata.csv')
 Data202304 <- read_csv('csv_files/202304-divvy-tripdata.csv')
@@ -29,6 +29,39 @@ Data202401 <- read_csv('csv_files/202401-divvy-tripdata.csv')
 Data202402 <- read_csv('csv_files/202402-divvy-tripdata.csv')
 
 ```
+
+Check for columns consistency 
+```{r}
+str(Data202303)
+str(Data202304)
+str(Data202305)
+str(Data202306)
+str(Data202307)
+str(Data202308)
+str(Data202309)
+str(Data202310)
+str(Data202311)
+str(Data202312)
+str(Data202401)
+str(Data202402)
+```
+
+Since all columns in dataframes are identical, all dataframes can be used to merge together to form a single dataframe.
+```{r}
+MergedData <- rbind(Data202303, Data202304, Data202305,
+                         Data202306, Data202307, Data202308,
+                         Data202309, Data202310, Data202311,
+                         Data202312, Data202401, Data202402)
+```
+
+
+Check the new dataframe created
+```{r}
+head(MergedData)
+```
+
+
+
 
 
 
