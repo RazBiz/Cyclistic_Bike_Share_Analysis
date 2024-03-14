@@ -1,0 +1,35 @@
+---
+title: "BikeShareAnalysis"
+author: "Razeen"
+date: "2024-03-14"
+output: html_document
+---
+
+
+### Load Packages
+```{r}
+library(tidyverse)
+library(readr)
+```
+
+
+reading CSV
+```{r readCSV}
+Data202303 <- read_csv('csv_files/202303-divvy-tripdata.csv')
+Data202304 <- read_csv('csv_files/202304-divvy-tripdata.csv')
+Data202305 <- read_csv('csv_files/202305-divvy-tripdata.csv')
+Data202306 <- read_csv('csv_files/202306-divvy-tripdata.csv')
+Data202307 <- read_csv('csv_files/202307-divvy-tripdata.csv')
+Data202308 <- read_csv('csv_files/202308-divvy-tripdata.csv')
+Data202309 <- read_csv('csv_files/202309-divvy-tripdata.csv')
+Data202310 <- read_csv('csv_files/202310-divvy-tripdata.csv')
+Data202311 <- read_csv('csv_files/202311-divvy-tripdata.csv')
+Data202312 <- read_csv('csv_files/202312-divvy-tripdata.csv')
+Data202401 <- read_csv('csv_files/202401-divvy-tripdata.csv')
+Data202402 <- read_csv('csv_files/202402-divvy-tripdata.csv')
+
+```
+
+
+
+
