@@ -15,3 +15,5 @@ Cyclistic operates a bike-share program with over 5,800 bicycles and 600 docking
 3. Formulate a strategic plan leveraging digital media channels to effectively target casual riders and encourage them to transition into becoming Cyclistic annual members, emphasizing personalized messaging, targeted promotions, and engagement strategies tailored to their needs and preferences.
 
 For the analysis, I used the previous 12 months of trip data from [here.](https://divvy-tripdata.s3.amazonaws.com/index.html)
+
+The process in R is documented [here.](BikeShareAnalysis.md)
