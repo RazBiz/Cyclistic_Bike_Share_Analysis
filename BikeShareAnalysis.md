@@ -26,6 +26,7 @@ library(tidyverse)
 
 ``` r
 library(readr)
+library(lubridate)
 ```
 
 Reading CSV files into dataframes
@@ -642,7 +643,7 @@ MergedData <- rbind(Data202303, Data202304, Data202305,
                          Data202312, Data202401, Data202402)
 ```
 
-Check the new dataframe created
+Check the new dataframe created.
 
 ``` r
 head(MergedData)
@@ -660,3 +661,120 @@ head(MergedData)
     ## # ℹ 9 more variables: start_station_name <chr>, start_station_id <chr>,
     ## #   end_station_name <chr>, end_station_id <chr>, start_lat <dbl>,
     ## #   start_lng <dbl>, end_lat <dbl>, end_lng <dbl>, member_casual <chr>
+
+Remove duplicates of ride_id to ensure each ride is unique.
+
+``` r
+NoDupMergedData <- MergedData %>% 
+distinct(ride_id, .keep_all = TRUE)
+```
+
+create a new column for ride duration as ride_duration by subtracting
+started_at from ended_at column. This creates a column with ride
+duration in seconds.
+
+``` r
+NoDupMergedData <- mutate(NoDupMergedData, ride_duration=ended_at-started_at)
+```
+
+create a column for ride duration in minutes and make the type as
+double.
+
+``` r
+NoDupMergedData$ride_duration_minutes <- (as.double(difftime(NoDupMergedData$ended_at, NoDupMergedData$started_at))) /60
+```
+
+Create a new column for day of the week as day_of_week by extracting the
+day from started_at column
+
+``` r
+NoDupMergedData <- NoDupMergedData %>% 
+  mutate(month = month(started_at),
+         day_of_week = weekdays(started_at),
+         started_hour = hour(started_at))
+```
+
+Get summary of the merged dataframe.
+
+``` r
+summary(NoDupMergedData)
+```
+
+    ##    ride_id          rideable_type        started_at                    
+    ##  Length:5707168     Length:5707168     Min.   :2023-03-01 00:00:50.00  
+    ##  Class :character   Class :character   1st Qu.:2023-06-06 07:50:54.75  
+    ##  Mode  :character   Mode  :character   Median :2023-08-03 18:06:17.00  
+    ##                                        Mean   :2023-08-09 14:41:47.23  
+    ##                                        3rd Qu.:2023-10-03 18:10:31.25  
+    ##                                        Max.   :2024-02-29 23:59:15.00  
+    ##                                                                        
+    ##     ended_at                      start_station_name start_station_id  
+    ##  Min.   :2023-03-01 00:04:17.00   Length:5707168     Length:5707168    
+    ##  1st Qu.:2023-06-06 08:04:30.00   Class :character   Class :character  
+    ##  Median :2023-08-03 18:23:45.00   Mode  :character   Mode  :character  
+    ##  Mean   :2023-08-09 15:00:06.02                                        
+    ##  3rd Qu.:2023-10-03 18:26:05.25                                        
+    ##  Max.   :2024-03-01 23:51:12.00                                        
+    ##                                                                        
+    ##  end_station_name   end_station_id       start_lat       start_lng     
+    ##  Length:5707168     Length:5707168     Min.   :41.63   Min.   :-87.94  
+    ##  Class :character   Class :character   1st Qu.:41.88   1st Qu.:-87.66  
+    ##  Mode  :character   Mode  :character   Median :41.90   Median :-87.64  
+    ##                                        Mean   :41.90   Mean   :-87.65  
+    ##                                        3rd Qu.:41.93   3rd Qu.:-87.63  
+    ##                                        Max.   :42.07   Max.   :-87.46  
+    ##                                                                        
+    ##     end_lat         end_lng       member_casual      ride_duration    
+    ##  Min.   : 0.00   Min.   :-88.16   Length:5707168     Length:5707168   
+    ##  1st Qu.:41.88   1st Qu.:-87.66   Class :character   Class :difftime  
+    ##  Median :41.90   Median :-87.64   Mode  :character   Mode  :numeric   
+    ##  Mean   :41.90   Mean   :-87.65                                       
+    ##  3rd Qu.:41.93   3rd Qu.:-87.63                                       
+    ##  Max.   :42.18   Max.   :  0.00                                       
+    ##  NA's   :7353    NA's   :7353                                         
+    ##  ride_duration_minutes     month       day_of_week         started_hour  
+    ##  Min.   :-16656.52     Min.   : 1.00   Length:5707168     Min.   : 0.00  
+    ##  1st Qu.:     5.47     1st Qu.: 5.00   Class :character   1st Qu.:11.00  
+    ##  Median :     9.58     Median : 7.00   Mode  :character   Median :15.00  
+    ##  Mean   :    18.31     Mean   : 7.01                      Mean   :14.09  
+    ##  3rd Qu.:    16.98     3rd Qu.: 9.00                      3rd Qu.:18.00  
+    ##  Max.   : 98489.07     Max.   :12.00                      Max.   :23.00  
+    ## 
+
+At this point, all columns required for analysis are created.
+
+Looking at the summary of the newly created dataframe, it is visible
+that there are negative values for ride_duration. Creating a subset of
+dataframe with negative ride duration.
+
+``` r
+negative_duration_df <- subset(NoDupMergedData, ride_duration_minutes < 0)
+```
+
+Checking the rows of negative ride duration. The negative ride durations
+does not make sense.
+
+``` r
+head(negative_duration_df)
+```
+
+    ## # A tibble: 6 × 18
+    ##   ride_id          rideable_type started_at          ended_at           
+    ##   <chr>            <chr>         <dttm>              <dttm>             
+    ## 1 7A4D237E2C99D424 electric_bike 2023-04-04 17:15:08 2023-04-04 17:15:05
+    ## 2 81E1C5175FA5A23D classic_bike  2023-04-19 14:47:18 2023-04-19 14:47:14
+    ## 3 0063C3704F56EC55 electric_bike 2023-04-27 07:51:14 2023-04-27 07:51:09
+    ## 4 DFC43BD5CB34ACBF electric_bike 2023-04-06 23:09:31 2023-04-06 23:00:35
+    ## 5 934174DB8E2AD791 classic_bike  2023-05-29 17:34:21 2023-05-29 17:34:09
+    ## 6 ED9038136686A88A electric_bike 2023-05-29 16:57:34 2023-05-29 16:57:27
+    ## # ℹ 14 more variables: start_station_name <chr>, start_station_id <chr>,
+    ## #   end_station_name <chr>, end_station_id <chr>, start_lat <dbl>,
+    ## #   start_lng <dbl>, end_lat <dbl>, end_lng <dbl>, member_casual <chr>,
+    ## #   ride_duration <drtn>, ride_duration_minutes <dbl>, month <dbl>,
+    ## #   day_of_week <chr>, started_hour <int>
+
+Create a subset with positive values for ride duration.
+
+``` r
+PositveNoDupMergedData <- subset(NoDupMergedData, ride_duration_minutes > 0)
+```

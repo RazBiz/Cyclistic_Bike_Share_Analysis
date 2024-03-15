@@ -10,6 +10,7 @@ output: rmarkdown::github_document
 ```{r}
 library(tidyverse)
 library(readr)
+library(lubridate)
 ```
 
 
@@ -55,14 +56,64 @@ MergedData <- rbind(Data202303, Data202304, Data202305,
 ```
 
 
-Check the new dataframe created
+Check the new dataframe created.
 ```{r}
 head(MergedData)
 ```
 
+Remove duplicates of ride_id to ensure each ride is unique.
+```{r}
+NoDupMergedData <- MergedData %>% 
+distinct(ride_id, .keep_all = TRUE)
+```
+
+
+create a new column for ride duration as ride_duration by subtracting started_at from ended_at column. This creates a column with ride duration in seconds. 
+```{r}
+NoDupMergedData <- mutate(NoDupMergedData, ride_duration=ended_at-started_at)
+```
+
+
+create a column for ride duration in minutes and make the type as double. 
+```{r}
+NoDupMergedData$ride_duration_minutes <- (as.double(difftime(NoDupMergedData$ended_at, NoDupMergedData$started_at))) /60
+```
+
+
+Create a new column for day of the week as day_of_week by extracting the day from started_at column
+```{r}
+NoDupMergedData <- NoDupMergedData %>% 
+  mutate(month = month(started_at),
+         day_of_week = weekdays(started_at),
+         started_hour = hour(started_at))
+```
 
 
 
+Get summary of the merged dataframe.
+```{r}
+summary(NoDupMergedData)
+```
+
+At this point, all columns required for analysis are created. 
+
+Looking at the summary of the newly created dataframe, it is visible that there are negative values for ride_duration. 
+Creating a subset of dataframe with negative ride duration. 
+
+```{r}
+negative_duration_df <- subset(NoDupMergedData, ride_duration_minutes < 0)
+```
+
+Checking the rows of negative ride duration. The negative ride durations does not make sense.
+
+```{r}
+head(negative_duration_df)
+```
+
+Create a subset with positive values for ride duration. 
+```{r}
+PositveNoDupMergedData <- subset(NoDupMergedData, ride_duration_minutes > 0)
+```
 
 
 
