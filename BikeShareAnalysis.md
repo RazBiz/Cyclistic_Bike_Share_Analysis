@@ -27,6 +27,9 @@ library(tidyverse)
 ``` r
 library(readr)
 library(lubridate)
+library(ggplot2)
+# turn off scientific notations for axis
+options(scipen = 999, repr.plot.width = 11, repr.plot.height = 8)
 ```
 
 Reading CSV files into dataframes
@@ -689,7 +692,7 @@ day from started_at column
 
 ``` r
 NoDupMergedData <- NoDupMergedData %>% 
-  mutate(month = month(started_at),
+  mutate(month = month.name[month(started_at)],
          day_of_week = weekdays(started_at),
          started_hour = hour(started_at))
 ```
@@ -732,13 +735,13 @@ summary(NoDupMergedData)
     ##  3rd Qu.:41.93   3rd Qu.:-87.63                                       
     ##  Max.   :42.18   Max.   :  0.00                                       
     ##  NA's   :7353    NA's   :7353                                         
-    ##  ride_duration_minutes     month       day_of_week         started_hour  
-    ##  Min.   :-16656.52     Min.   : 1.00   Length:5707168     Min.   : 0.00  
-    ##  1st Qu.:     5.47     1st Qu.: 5.00   Class :character   1st Qu.:11.00  
-    ##  Median :     9.58     Median : 7.00   Mode  :character   Median :15.00  
-    ##  Mean   :    18.31     Mean   : 7.01                      Mean   :14.09  
-    ##  3rd Qu.:    16.98     3rd Qu.: 9.00                      3rd Qu.:18.00  
-    ##  Max.   : 98489.07     Max.   :12.00                      Max.   :23.00  
+    ##  ride_duration_minutes    month           day_of_week         started_hour  
+    ##  Min.   :-16656.52     Length:5707168     Length:5707168     Min.   : 0.00  
+    ##  1st Qu.:     5.47     Class :character   Class :character   1st Qu.:11.00  
+    ##  Median :     9.58     Mode  :character   Mode  :character   Median :15.00  
+    ##  Mean   :    18.31                                           Mean   :14.09  
+    ##  3rd Qu.:    16.98                                           3rd Qu.:18.00  
+    ##  Max.   : 98489.07                                           Max.   :23.00  
     ## 
 
 At this point, all columns required for analysis are created.
@@ -770,11 +773,82 @@ head(negative_duration_df)
     ## # ℹ 14 more variables: start_station_name <chr>, start_station_id <chr>,
     ## #   end_station_name <chr>, end_station_id <chr>, start_lat <dbl>,
     ## #   start_lng <dbl>, end_lat <dbl>, end_lng <dbl>, member_casual <chr>,
-    ## #   ride_duration <drtn>, ride_duration_minutes <dbl>, month <dbl>,
+    ## #   ride_duration <drtn>, ride_duration_minutes <dbl>, month <chr>,
     ## #   day_of_week <chr>, started_hour <int>
 
 Create a subset with positive values for ride duration.
 
 ``` r
 PositveNoDupMergedData <- subset(NoDupMergedData, ride_duration_minutes > 0)
+```
+
+head dataframe
+
+``` r
+head(PositveNoDupMergedData)
+```
+
+    ## # A tibble: 6 × 18
+    ##   ride_id          rideable_type started_at          ended_at           
+    ##   <chr>            <chr>         <dttm>              <dttm>             
+    ## 1 6842AA605EE9FBB3 electric_bike 2023-03-16 08:20:34 2023-03-16 08:22:52
+    ## 2 F984267A75B99A8C electric_bike 2023-03-04 14:07:06 2023-03-04 14:15:31
+    ## 3 FF7CF57CFE026D02 classic_bike  2023-03-31 12:28:09 2023-03-31 12:38:47
+    ## 4 6B61B916032CB6D6 classic_bike  2023-03-22 14:09:08 2023-03-22 14:24:51
+    ## 5 E55E61A5F1260040 electric_bike 2023-03-09 07:15:00 2023-03-09 07:26:00
+    ## 6 123AAD676850F53C classic_bike  2023-03-22 17:47:02 2023-03-22 18:01:29
+    ## # ℹ 14 more variables: start_station_name <chr>, start_station_id <chr>,
+    ## #   end_station_name <chr>, end_station_id <chr>, start_lat <dbl>,
+    ## #   start_lng <dbl>, end_lat <dbl>, end_lng <dbl>, member_casual <chr>,
+    ## #   ride_duration <drtn>, ride_duration_minutes <dbl>, month <chr>,
+    ## #   day_of_week <chr>, started_hour <int>
+
+get a subset of data to practice graphs
+
+``` r
+datasmall <- PositveNoDupMergedData %>%
+  slice(1:2000)
+```
+
+\#Analysis
+
+user percentage dataframe
+
+``` r
+user_percentage_summary <- PositveNoDupMergedData %>% 
+  group_by(member_casual) %>% 
+  summarise(count = n(),  percentage = round(length(ride_id)/nrow(PositveNoDupMergedData)*100,2), 
+            .groups = "drop")
+```
+
+Total number of rides
+
+``` r
+ggplot(user_percentage_summary, aes(x = "", y = count, fill = member_casual)) + 
+  geom_col() + 
+  labs(title = "Number of Rides Taken by User Type (Mar 2023 - Feb 2024)") + 
+  geom_text(aes(label = paste(percentage, "%")), position = position_stack(vjust = 0.5), size = 4) + 
+  theme_void(base_size = 12) +  # Adjust font size here
+  scale_fill_discrete(name = "User Type") + 
+  coord_polar(theta = "y") +
+  theme(plot.title = element_text(margin = margin(b = 20)))  # Adjust title margin
+```
+
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+
+comparison between two types against start hour of the rides.
+
+``` r
+#ggplot(PositveNoDupMergedData, aes(started_hour, fill=member_casual)) +
+#  geom_bar(position="dodge", alpha=0.5)
+```
+
+second plot
+
+``` r
+#ggplot(data = PositveNoDupMergedData, aes(x = member_casual, y = ride_duration_minutes, fill = member_casual)) +
+#  geom_violin(trim = FALSE) +
+#  scale_fill_manual(values = c("blue", "red")) +  # Adjust colors as needed
+#  labs(x = "Member Type", y = "Ride Duration (minutes)") +
+#  theme_minimal()
 ```

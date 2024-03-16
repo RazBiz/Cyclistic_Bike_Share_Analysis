@@ -11,6 +11,9 @@ output: rmarkdown::github_document
 library(tidyverse)
 library(readr)
 library(lubridate)
+library(ggplot2)
+# turn off scientific notations for axis
+options(scipen = 999, repr.plot.width = 11, repr.plot.height = 8)
 ```
 
 
@@ -83,7 +86,7 @@ NoDupMergedData$ride_duration_minutes <- (as.double(difftime(NoDupMergedData$end
 Create a new column for day of the week as day_of_week by extracting the day from started_at column
 ```{r}
 NoDupMergedData <- NoDupMergedData %>% 
-  mutate(month = month(started_at),
+  mutate(month = month.name[month(started_at)],
          day_of_week = weekdays(started_at),
          started_hour = hour(started_at))
 ```
@@ -114,6 +117,67 @@ Create a subset with positive values for ride duration.
 ```{r}
 PositveNoDupMergedData <- subset(NoDupMergedData, ride_duration_minutes > 0)
 ```
+
+
+head dataframe
+```{r}
+head(PositveNoDupMergedData)
+```
+
+
+
+
+
+
+get a subset of data to practice graphs
+```{r}
+datasmall <- PositveNoDupMergedData %>%
+  slice(1:2000)
+```
+
+
+#Analysis
+
+user percentage dataframe 
+```{r}
+user_percentage_summary <- PositveNoDupMergedData %>% 
+  group_by(member_casual) %>% 
+  summarise(count = n(),  percentage = round(length(ride_id)/nrow(PositveNoDupMergedData)*100,2), 
+            .groups = "drop")
+```
+
+
+Total number of rides 
+```{r}
+ggplot(user_percentage_summary, aes(x = "", y = count, fill = member_casual)) + 
+  geom_col() + 
+  labs(title = "Number of Rides Taken by User Type (Mar 2023 - Feb 2024)") + 
+  geom_text(aes(label = paste(percentage, "%")), position = position_stack(vjust = 0.5), size = 4) + 
+  theme_void(base_size = 12) +  # Adjust font size here
+  scale_fill_discrete(name = "User Type") + 
+  coord_polar(theta = "y") +
+  theme(plot.title = element_text(margin = margin(b = 20)))  # Adjust title margin
+```
+
+
+
+
+comparison between two types against start hour of the rides. 
+```{r}
+#ggplot(PositveNoDupMergedData, aes(started_hour, fill=member_casual)) +
+#  geom_bar(position="dodge", alpha=0.5)
+```
+
+second plot
+```{r}
+#ggplot(data = PositveNoDupMergedData, aes(x = member_casual, y = ride_duration_minutes, fill = member_casual)) +
+#  geom_violin(trim = FALSE) +
+#  scale_fill_manual(values = c("blue", "red")) +  # Adjust colors as needed
+#  labs(x = "Member Type", y = "Ride Duration (minutes)") +
+#  theme_minimal()
+```
+
+
 
 
 
