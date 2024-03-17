@@ -132,7 +132,7 @@ head(PositveNoDupMergedData)
 get a subset of data to practice graphs
 ```{r}
 datasmall <- PositveNoDupMergedData %>%
-  slice(1:2000)
+  slice(1:1000000)
 ```
 
 
@@ -151,31 +151,101 @@ Total number of rides
 ```{r}
 ggplot(user_percentage_summary, aes(x = "", y = count, fill = member_casual)) + 
   geom_col() + 
-  labs(title = "Number of Rides Taken by User Type (Mar 2023 - Feb 2024)") + 
+  labs(title = "Rides by User Type (Mar 2023 - Feb 2024)") + 
   geom_text(aes(label = paste(percentage, "%")), position = position_stack(vjust = 0.5), size = 4) + 
-  theme_void(base_size = 12) +  # Adjust font size here
+  theme_void(base_size = 12) +
   scale_fill_discrete(name = "User Type") + 
   coord_polar(theta = "y") +
-  theme(plot.title = element_text(margin = margin(b = 20)))  # Adjust title margin
+  theme(plot.title = element_text(margin = margin(b = 20))) 
 ```
 
-
-
-
-comparison between two types against start hour of the rides. 
+comparison of months vs rides 
 ```{r}
-#ggplot(PositveNoDupMergedData, aes(started_hour, fill=member_casual)) +
-#  geom_bar(position="dodge", alpha=0.5)
+PositveNoDupMergedData$month <- factor(PositveNoDupMergedData$month, levels = c("March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February"))
+
+ggplot(PositveNoDupMergedData, aes(month, fill=member_casual)) +
+  geom_bar(position="dodge", alpha=0.5) + 
+  labs(title = "Rides by Month (Mar 2023 - Feb 2024)") +
+  scale_fill_discrete(name = "User Type") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 ```
 
-second plot
+Ride preference by day
+
 ```{r}
-#ggplot(data = PositveNoDupMergedData, aes(x = member_casual, y = ride_duration_minutes, fill = member_casual)) +
-#  geom_violin(trim = FALSE) +
-#  scale_fill_manual(values = c("blue", "red")) +  # Adjust colors as needed
-#  labs(x = "Member Type", y = "Ride Duration (minutes)") +
-#  theme_minimal()
+PositveNoDupMergedData$day_of_week <- factor(PositveNoDupMergedData$day_of_week, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
+
+
+ggplot(PositveNoDupMergedData, aes(day_of_week, fill=member_casual)) +
+  geom_bar(position="dodge", alpha=0.5) + 
+  labs(title = "Rides Preference by Day  of Week (Mar 2023 - Feb 2024)") +
+  scale_fill_discrete(name = "User Type") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+
+
+#Weekday Analysis
+
+Getting the number of rides by hours on weekdays
+```{r}
+count_by_hours_on_weekdays <- PositveNoDupMergedData %>%
+  filter(!(day_of_week %in% c("Saturday", "Sunday")))%>%
+  group_by(day_of_week, member_casual, started_hour) %>%
+  summarise(count = n(), .groups = "drop")
+```
+
+plot the number of rides by hours on weekdays
+```{r}
+ggplot(count_by_hours_on_weekdays, aes(x = started_hour, y = count, group = member_casual, 
+  color = member_casual)) + 
+  geom_point() + 
+  geom_line() +
+  labs(title = "Ride Count by Hour of Day on Weekdays (Mar 2023 - Feb 2024)", x = "Hour of Day", 
+  y = "No. of Rides") + guides(color = guide_legend(title = "User Type")) + 
+  theme(plot.title = element_text(margin = margin(b = 20))) +
+  facet_wrap(~day_of_week)
+```
+Ride duration by weekday
+
+
+
+
+
+
+
+#Weekend Analysis
+
+Getting the number of rides by hours on weekends
+```{r}
+
+count_by_hours_on_weekends <- PositveNoDupMergedData %>%
+  filter(day_of_week %in% c("Saturday", "Sunday")) %>%
+  group_by(day_of_week, member_casual, started_hour) %>%
+  summarise(count = n(), .groups = "drop")
+
+```
+
+
+
+plot the number of rides by hours on weekends
+```{r}
+ggplot(count_by_hours_on_weekends, aes(x = started_hour, y = count, group = member_casual, 
+  color = member_casual)) + 
+  geom_point() + 
+  geom_line() +
+  labs(title = "Ride Count by Hour of Day on Weekends (Mar 2023 - Feb 2024)", x = "Hour of Day", 
+  y = "No. of Rides") + guides(color = guide_legend(title = "User Type")) + 
+  theme(plot.title = element_text(margin = margin(b = 20))) +
+  facet_wrap(~day_of_week)
+```
+
+
+
+
+
+
+
 
 
 
