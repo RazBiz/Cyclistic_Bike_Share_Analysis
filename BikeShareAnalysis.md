@@ -640,10 +640,12 @@ Since all columns in dataframes are identical, all dataframes can be
 used to merge together to form a single dataframe.
 
 ``` r
-MergedData <- rbind(Data202303, Data202304, Data202305,
-                         Data202306, Data202307, Data202308,
-                         Data202309, Data202310, Data202311,
-                         Data202312, Data202401, Data202402)
+MergedData <- rbind(
+  Data202303, Data202304, Data202305,
+  Data202306, Data202307, Data202308,
+  Data202309, Data202310, Data202311,
+  Data202312, Data202401, Data202402
+  )
 ```
 
 Check the new dataframe created.
@@ -779,13 +781,13 @@ head(negative_duration_df)
 Create a subset with positive values for ride duration.
 
 ``` r
-PositveNoDupMergedData <- subset(NoDupMergedData, ride_duration_minutes > 0)
+PositiveNoDupMergedData <- subset(NoDupMergedData, ride_duration_minutes > 0)
 ```
 
 head dataframe
 
 ``` r
-head(PositveNoDupMergedData)
+head(PositiveNoDupMergedData)
 ```
 
     ## # A tibble: 6 × 18
@@ -806,24 +808,20 @@ head(PositveNoDupMergedData)
 get a subset of data to practice graphs
 
 ``` r
-datasmall <- PositveNoDupMergedData %>%
+datasmall <- PositiveNoDupMergedData %>%
   slice(1:1000000)
 ```
 
 \#Analysis
 
-user percentage dataframe
+user percentage dataframe Total number of rides
 
 ``` r
-user_percentage_summary <- PositveNoDupMergedData %>% 
+user_percentage_summary <- PositiveNoDupMergedData %>% 
   group_by(member_casual) %>% 
-  summarise(count = n(),  percentage = round(length(ride_id)/nrow(PositveNoDupMergedData)*100,2), 
+  summarise(count = n(),  percentage = round(length(ride_id)/nrow(PositiveNoDupMergedData)*100,2), 
             .groups = "drop")
-```
 
-Total number of rides
-
-``` r
 ggplot(user_percentage_summary, aes(x = "", y = count, fill = member_casual)) + 
   geom_col() + 
   labs(title = "Rides by User Type (Mar 2023 - Feb 2024)") + 
@@ -834,51 +832,47 @@ ggplot(user_percentage_summary, aes(x = "", y = count, fill = member_casual)) +
   theme(plot.title = element_text(margin = margin(b = 20))) 
 ```
 
-![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 comparison of months vs rides
 
 ``` r
-PositveNoDupMergedData$month <- factor(PositveNoDupMergedData$month, levels = c("March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February"))
+PositiveNoDupMergedData$month <- factor(PositiveNoDupMergedData$month, levels = c("March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February"))
 
-ggplot(PositveNoDupMergedData, aes(month, fill=member_casual)) +
+ggplot(PositiveNoDupMergedData, aes(month, fill=member_casual)) +
   geom_bar(position="dodge", alpha=0.5) + 
   labs(title = "Rides by Month (Mar 2023 - Feb 2024)") +
   scale_fill_discrete(name = "User Type") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 Ride preference by day
 
 ``` r
-PositveNoDupMergedData$day_of_week <- factor(PositveNoDupMergedData$day_of_week, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
+PositiveNoDupMergedData$day_of_week <- factor(PositiveNoDupMergedData$day_of_week, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
 
 
-ggplot(PositveNoDupMergedData, aes(day_of_week, fill=member_casual)) +
+ggplot(PositiveNoDupMergedData, aes(day_of_week, fill=member_casual)) +
   geom_bar(position="dodge", alpha=0.5) + 
   labs(title = "Rides Preference by Day  of Week (Mar 2023 - Feb 2024)") +
   scale_fill_discrete(name = "User Type") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 \#Weekday Analysis
 
 Getting the number of rides by hours on weekdays
 
 ``` r
-count_by_hours_on_weekdays <- PositveNoDupMergedData %>%
+count_by_hours_on_weekdays <- PositiveNoDupMergedData %>%
   filter(!(day_of_week %in% c("Saturday", "Sunday")))%>%
   group_by(day_of_week, member_casual, started_hour) %>%
   summarise(count = n(), .groups = "drop")
-```
 
-plot the number of rides by hours on weekdays
-
-``` r
 ggplot(count_by_hours_on_weekdays, aes(x = started_hour, y = count, group = member_casual, 
   color = member_casual)) + 
   geom_point() + 
@@ -889,23 +883,59 @@ ggplot(count_by_hours_on_weekdays, aes(x = started_hour, y = count, group = memb
   facet_wrap(~day_of_week)
 ```
 
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+Bike type preference on weekdays
+
+``` r
+bike_preference_weekdays <- PositiveNoDupMergedData %>%
+  filter(!(day_of_week %in% c("Saturday", "Sunday")))%>%
+  group_by(day_of_week, rideable_type, started_hour) %>%
+  summarise(count = n(), .groups = "drop")
+
+ggplot(bike_preference_weekdays, aes(x = started_hour, y = count, group = rideable_type, 
+  color = rideable_type)) + 
+  geom_point() + 
+  geom_line() +
+  labs(title = "Bike type preference by Hour of Day on Weekdays (Mar 2023 - Feb 2024)", x = "Hour of Day", 
+  y = "No. of Bikes") + guides(color = guide_legend(title = "Bike Type")) + 
+  theme(plot.title = element_text(margin = margin(b = 20))) +
+  facet_wrap(~day_of_week) +
+  scale_color_manual(values = c("classic_bike" = "yellow", "docked_bike" = "purple", "electric_bike" = "green" ))
+```
+
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+ride duration (weekday)
+
+``` r
+ride_duration_weekdays <- PositiveNoDupMergedData %>%
+  filter(!(day_of_week %in% c("Saturday", "Sunday")))%>%
+  group_by(day_of_week, member_casual) %>%
+  summarise(avg_ride_duration = mean(ride_duration_minutes), .groups = 'drop')
+
+
+ggplot(ride_duration_weekdays, aes(day_of_week, avg_ride_duration, fill = member_casual)) +
+  geom_bar(position = "dodge", alpha = 0.5, stat = "identity") + 
+  labs(title = "Average ride duration by Day on Weekdays (Mar 2023 - Feb 2024)",
+       x = "Day of the Week",
+       y = "Average Ride Duration") +
+  scale_fill_manual(values = c("casual" = "red", "member" = "blue"), name = "User Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
 ![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
-Ride duration by weekday
 
 \#Weekend Analysis
 
 Getting the number of rides by hours on weekends
 
 ``` r
-count_by_hours_on_weekends <- PositveNoDupMergedData %>%
+count_by_hours_on_weekends <- PositiveNoDupMergedData %>%
   filter(day_of_week %in% c("Saturday", "Sunday")) %>%
   group_by(day_of_week, member_casual, started_hour) %>%
   summarise(count = n(), .groups = "drop")
-```
 
-plot the number of rides by hours on weekends
-
-``` r
 ggplot(count_by_hours_on_weekends, aes(x = started_hour, y = count, group = member_casual, 
   color = member_casual)) + 
   geom_point() + 
@@ -916,4 +946,46 @@ ggplot(count_by_hours_on_weekends, aes(x = started_hour, y = count, group = memb
   facet_wrap(~day_of_week)
 ```
 
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+
+Bike type preference on weekend
+
+``` r
+bike_preference_weekend <- PositiveNoDupMergedData %>%
+  filter(day_of_week %in% c("Saturday", "Sunday"))%>%
+  group_by(day_of_week, rideable_type, started_hour) %>%
+  summarise(count = n(), .groups = "drop")
+
+ggplot(bike_preference_weekend, aes(x = started_hour, y = count, group = rideable_type, 
+  color = rideable_type)) + 
+  geom_point() + 
+  geom_line() +
+  labs(title = "Bike type preference by Hour of Day on Weekends (Mar 2023 - Feb 2024)", x = "Hour of Day", 
+  y = "No. of Bikes") + guides(color = guide_legend(title = "Bike Type")) + 
+  theme(plot.title = element_text(margin = margin(b = 20))) +
+  facet_wrap(~day_of_week) +
+  scale_color_manual(values = c("classic_bike" = "yellow", "docked_bike" = "purple", "electric_bike" = "green" ))
+```
+
 ![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+
+ride duration (weekend)
+
+``` r
+ride_duration_weekend <- PositiveNoDupMergedData %>%
+  filter(day_of_week %in% c("Saturday", "Sunday"))%>%
+  group_by(day_of_week, member_casual) %>%
+  summarise(avg_ride_duration = mean(ride_duration_minutes), .groups = 'drop')
+
+
+ggplot(ride_duration_weekend, aes(day_of_week, avg_ride_duration, fill = member_casual)) +
+  geom_bar(position = "dodge", alpha = 0.5, stat = "identity") + 
+  labs(title = "Average ride duration by Day on weekends (Mar 2023 - Feb 2024)",
+       x = "Day of the Week",
+       y = "Average Ride Duration") +
+  scale_fill_manual(values = c("casual" = "red", "member" = "blue"), name = "User Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
