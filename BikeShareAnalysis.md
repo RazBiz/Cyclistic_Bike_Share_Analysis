@@ -3,7 +3,48 @@ BikeShareAnalysis
 Razeen
 2024-03-14
 
-### Load Packages
+# Background
+
+Cyclistic is a prominent bike-share company based in Chicago. Since its
+establishment in 2016, Cyclistic has expanded the services to 692
+stations across Chicago with 5,824 bikes. The pricing options, including
+single-ride and full-day passes, alongside coveted annual memberships,
+offer flexibility to a diverse customer base.
+
+Financial analysis has affirmed the profitability of annual memberships.
+Therefore, this task revolves around enhancing annual memberships at
+Cyclistic, to ensure its enduring success. Under the guidance of Lily
+Moreno, marketing director, the aim is to explore bike usage between
+casual riders and annual members.
+
+The objective is to create an effective marketing strategy that
+transitions casual riders into committed annual members, all underpinned
+by compelling data insights and visualizations.
+
+# Ask
+
+The analysis need to answer the following question. - How do annual
+members and casual riders use Cyclistic bikes differently?
+
+# Prepare
+
+Historic data required for the analysis were to be downloaded from
+bike-share company dataset named Divvy.  
+Following steps were taken to prepare the data for exploration. 1.
+Download last 12 months of rides data from
+[Divvy.](https://divvy-tripdata.s3.amazonaws.com/index.html) 2. The
+compressed files for each month were extracted into the project folder.
+3. The CSV files were then examined to understand the size of the data
+as well as available variables for analysis.
+
+CSV files consist of 13 columns and thousands of observations in each
+file. When combined it would be over 5 million observations. Therefore,
+using R would be ideal to load each csv to dataframes and then combine
+all dataframes to a single dataframe.
+
+# Process
+
+## Load Packages
 
 ``` r
 library(tidyverse)
@@ -32,7 +73,8 @@ library(ggplot2)
 options(scipen = 999, repr.plot.width = 11, repr.plot.height = 8)
 ```
 
-Reading CSV files into dataframes
+Loading CSV files into dataframes for each month using *read_csv*
+function.
 
 ``` r
 Data202303 <- read_csv('csv_files/202303-divvy-tripdata.csv')
@@ -202,7 +244,8 @@ Data202402 <- read_csv('csv_files/202402-divvy-tripdata.csv')
     ## ℹ Use `spec()` to retrieve the full column specification for this data.
     ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 
-Check for columns consistency
+Explore each dataframe for column consistency using the *structure(str)*
+function.
 
 ``` r
 str(Data202303)
@@ -637,7 +680,7 @@ str(Data202402)
     ##  - attr(*, "problems")=<externalptr>
 
 Since all columns in dataframes are identical, all dataframes can be
-used to merge together to form a single dataframe.
+used to merge together to form a single dataframe using *rbind*.
 
 ``` r
 MergedData <- rbind(
@@ -648,7 +691,7 @@ MergedData <- rbind(
   )
 ```
 
-Check the new dataframe created.
+Check the combined dataframe created by using the *head* function.
 
 ``` r
 head(MergedData)
@@ -667,30 +710,33 @@ head(MergedData)
     ## #   end_station_name <chr>, end_station_id <chr>, start_lat <dbl>,
     ## #   start_lng <dbl>, end_lat <dbl>, end_lng <dbl>, member_casual <chr>
 
-Remove duplicates of ride_id to ensure each ride is unique.
+ride_id is an unique field, therefore duplicates need to be removed if
+there are any available. The *distinct* function can be used to perform
+this task.
 
 ``` r
 NoDupMergedData <- MergedData %>% 
 distinct(ride_id, .keep_all = TRUE)
 ```
 
-create a new column for ride duration as ride_duration by subtracting
-started_at from ended_at column. This creates a column with ride
-duration in seconds.
+Create a new field for ride duration as ride_duration by subtracting
+started_at from ended_at field. This creates a field with ride duration
+in seconds.
 
 ``` r
 NoDupMergedData <- mutate(NoDupMergedData, ride_duration=ended_at-started_at)
 ```
 
-create a column for ride duration in minutes and make the type as
-double.
+create a new field for ride duration in minutes and make the type as
+double using *as.double* and *difftime*.
 
 ``` r
 NoDupMergedData$ride_duration_minutes <- (as.double(difftime(NoDupMergedData$ended_at, NoDupMergedData$started_at))) /60
 ```
 
-Create a new column for day of the week as day_of_week by extracting the
-day from started_at column
+Create new fields for started hour as started_hour, day of the week as
+day_of_week, and month as month by using *month.name*, *weekdays*, and
+*hour* functions on the started_at field.
 
 ``` r
 NoDupMergedData <- NoDupMergedData %>% 
@@ -699,7 +745,8 @@ NoDupMergedData <- NoDupMergedData %>%
          started_hour = hour(started_at))
 ```
 
-Get summary of the merged dataframe.
+A summary of the latest dataframe can be checked using *summary*
+function to explore the distribution of values in each field.
 
 ``` r
 summary(NoDupMergedData)
@@ -746,20 +793,14 @@ summary(NoDupMergedData)
     ##  Max.   : 98489.07                                           Max.   :23.00  
     ## 
 
-At this point, all columns required for analysis are created.
-
 Looking at the summary of the newly created dataframe, it is visible
-that there are negative values for ride_duration. Creating a subset of
-dataframe with negative ride duration.
+that there are negative values for ride_duration. The negative ride
+durations does not make sense. To check this, a subset of dataframe with
+negative ride duration can be creating by filtering the
+ride_duration_minutes for values less than 0.
 
 ``` r
 negative_duration_df <- subset(NoDupMergedData, ride_duration_minutes < 0)
-```
-
-Checking the rows of negative ride duration. The negative ride durations
-does not make sense.
-
-``` r
 head(negative_duration_df)
 ```
 
@@ -778,49 +819,42 @@ head(negative_duration_df)
     ## #   ride_duration <drtn>, ride_duration_minutes <dbl>, month <chr>,
     ## #   day_of_week <chr>, started_hour <int>
 
-Create a subset with positive values for ride duration.
+There are 296 observations that contains negative ride durations. These
+needs to be removed from the main dataframe. To do this, a subset of the
+main dataframe can be created using only the positive values for
+ride_duration_minutes by filtering values greater than 0.
 
 ``` r
 PositiveNoDupMergedData <- subset(NoDupMergedData, ride_duration_minutes > 0)
 ```
 
-head dataframe
+Now, the main dataframe *PositiveNoDupMergedData* is ready to be
+analyzed after removing duplicates, parsing, filtering, and transforming
+the raw dataframe.
 
-``` r
-head(PositiveNoDupMergedData)
-```
+# Analyze
 
-    ## # A tibble: 6 × 18
-    ##   ride_id          rideable_type started_at          ended_at           
-    ##   <chr>            <chr>         <dttm>              <dttm>             
-    ## 1 6842AA605EE9FBB3 electric_bike 2023-03-16 08:20:34 2023-03-16 08:22:52
-    ## 2 F984267A75B99A8C electric_bike 2023-03-04 14:07:06 2023-03-04 14:15:31
-    ## 3 FF7CF57CFE026D02 classic_bike  2023-03-31 12:28:09 2023-03-31 12:38:47
-    ## 4 6B61B916032CB6D6 classic_bike  2023-03-22 14:09:08 2023-03-22 14:24:51
-    ## 5 E55E61A5F1260040 electric_bike 2023-03-09 07:15:00 2023-03-09 07:26:00
-    ## 6 123AAD676850F53C classic_bike  2023-03-22 17:47:02 2023-03-22 18:01:29
-    ## # ℹ 14 more variables: start_station_name <chr>, start_station_id <chr>,
-    ## #   end_station_name <chr>, end_station_id <chr>, start_lat <dbl>,
-    ## #   start_lng <dbl>, end_lat <dbl>, end_lng <dbl>, member_casual <chr>,
-    ## #   ride_duration <drtn>, ride_duration_minutes <dbl>, month <chr>,
-    ## #   day_of_week <chr>, started_hour <int>
-
-get a subset of data to practice graphs
+Since the main dataframe is large, a smaller chunk of the dataframe can
+be created using the *slice* function. The smaller dataframe can be used
+to perform certain functions/visualizations to make sure that the
+function performs what is required before applying the function on the
+larger dataset. This is a good practice to save time when checking the
+results of the operation over a larger dataset.
 
 ``` r
 datasmall <- PositiveNoDupMergedData %>%
   slice(1:1000000)
 ```
 
-\#Analysis
-
-user percentage dataframe Total number of rides
+The total number of member and casual usage over past 12 months as a
+percentage of the total rides can be summarized as follows.
 
 ``` r
 user_percentage_summary <- PositiveNoDupMergedData %>% 
   group_by(member_casual) %>% 
-  summarise(count = n(),  percentage = round(length(ride_id)/nrow(PositiveNoDupMergedData)*100,2), 
-            .groups = "drop")
+  summarise(count = n(),  percentage = round(length(ride_id)/nrow(PositiveNoDupMergedData)*100,2), .groups = "drop")
+
+View(user_percentage_summary)
 
 ggplot(user_percentage_summary, aes(x = "", y = count, fill = member_casual)) + 
   geom_col() + 
@@ -832,9 +866,15 @@ ggplot(user_percentage_summary, aes(x = "", y = count, fill = member_casual)) +
   theme(plot.title = element_text(margin = margin(b = 20))) 
 ```
 
-![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+It is clear that the highest number of rides were taken by user type
+members with a count of 3,658,586 rides. The number of casual rides were
+2,047,205.
 
-comparison of months vs rides
+## Analysis by month
+
+To further understand the distribution of bike rides by the two user
+types, the usage for each month can be analyzed.
 
 ``` r
 PositiveNoDupMergedData$month <- factor(PositiveNoDupMergedData$month, levels = c("March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February"))
@@ -846,9 +886,23 @@ ggplot(PositiveNoDupMergedData, aes(month, fill=member_casual)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+It can be seen that the highest rides taken by the members was in August
+and the highest number of rides taken by casual user type was in July,
+From the above plot it can also be seen that there is a relation between
+the number of rides and the month for both user types. A gradual
+increase of both ride types through March to August, and a decrease of
+rides from August to January. This could be due to year end/beginning
+seasons as everyone celebrates holidays with Christmas and New year. It
+can also be due to the weather conditions during these months. To
+further explore the conditions, weather data can be analyzed in the
+particular areas of rides taken (But weather data is not included in the
+dataset).
 
-Ride preference by day
+## Analysis by day of the week
+
+Further analysis can be made by comparing preference of day of the week
+by different user types throughout the 12 months.
 
 ``` r
 PositiveNoDupMergedData$day_of_week <- factor(PositiveNoDupMergedData$day_of_week, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
@@ -856,14 +910,21 @@ PositiveNoDupMergedData$day_of_week <- factor(PositiveNoDupMergedData$day_of_wee
 
 ggplot(PositiveNoDupMergedData, aes(day_of_week, fill=member_casual)) +
   geom_bar(position="dodge", alpha=0.5) + 
-  labs(title = "Rides Preference by Day  of Week (Mar 2023 - Feb 2024)") +
+  labs(title = "Rides Preference by Day of Week (Mar 2023 - Feb 2024)") +
   scale_fill_discrete(name = "User Type") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+It is evident that throughout all days of the week, members have the
+highest number of rides than casual riders. But looking at the trend of
+ride counts, rides taken by members are higher during weekdays compared
+to weekends. On the other hand, the rides taken by casual members are
+higher during the weekends and especially on Saturday.
 
-\#Weekday Analysis
+## Analysis of rides on weekdays
+
+### Hour of day on weekdays
 
 Getting the number of rides by hours on weekdays
 
@@ -883,9 +944,9 @@ ggplot(count_by_hours_on_weekdays, aes(x = started_hour, y = count, group = memb
   facet_wrap(~day_of_week)
 ```
 
-![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
-Bike type preference on weekdays
+### Bike type preference on weekdays
 
 ``` r
 bike_preference_weekdays <- PositiveNoDupMergedData %>%
@@ -904,8 +965,9 @@ ggplot(bike_preference_weekdays, aes(x = started_hour, y = count, group = rideab
   scale_color_manual(values = c("classic_bike" = "yellow", "docked_bike" = "purple", "electric_bike" = "green" ))
 ```
 
-![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
-ride duration (weekday)
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+### Ride duration on weekdays
 
 ``` r
 ride_duration_weekdays <- PositiveNoDupMergedData %>%
@@ -924,9 +986,11 @@ ggplot(ride_duration_weekdays, aes(day_of_week, avg_ride_duration, fill = member
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
-\#Weekend Analysis
+## Analysis of rides on weekends
+
+### Hour of day on weekends
 
 Getting the number of rides by hours on weekends
 
@@ -946,9 +1010,9 @@ ggplot(count_by_hours_on_weekends, aes(x = started_hour, y = count, group = memb
   facet_wrap(~day_of_week)
 ```
 
-![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
-Bike type preference on weekend
+### Bike type preference on weekends
 
 ``` r
 bike_preference_weekend <- PositiveNoDupMergedData %>%
@@ -967,9 +1031,9 @@ ggplot(bike_preference_weekend, aes(x = started_hour, y = count, group = rideabl
   scale_color_manual(values = c("classic_bike" = "yellow", "docked_bike" = "purple", "electric_bike" = "green" ))
 ```
 
-![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
-ride duration (weekend)
+### Ride duration on weekends
 
 ``` r
 ride_duration_weekend <- PositiveNoDupMergedData %>%
@@ -988,4 +1052,8 @@ ggplot(ride_duration_weekend, aes(day_of_week, avg_ride_duration, fill = member_
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+
+# Share
+
+# Act
