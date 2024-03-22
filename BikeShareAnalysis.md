@@ -21,28 +21,32 @@ The objective is to create an effective marketing strategy that
 transitions casual riders into committed annual members, all underpinned
 by compelling data insights and visualizations.
 
-# Ask
+# Objective
 
-The analysis need to answer the following question. - How do annual
-members and casual riders use Cyclistic bikes differently?
+The objective of the analysis is to answer the following question.
 
-# Prepare
+- How do annual members and casual riders use Cyclistic bikes
+  differently?
+
+# Prepare data for Analysis
 
 Historic data required for the analysis were to be downloaded from
 bike-share company dataset named Divvy.  
-Following steps were taken to prepare the data for exploration. 1.
-Download last 12 months of rides data from
-[Divvy.](https://divvy-tripdata.s3.amazonaws.com/index.html) 2. The
-compressed files for each month were extracted into the project folder.
-3. The CSV files were then examined to understand the size of the data
-as well as available variables for analysis.
+Following steps were taken to prepare the data for exploration.
+
+1.  Download last 12 months of rides data from
+    [Divvy.](https://divvy-tripdata.s3.amazonaws.com/index.html)  
+2.  The compressed files for each month were extracted into the project
+    folder.  
+3.  The CSV files were then examined to understand the size of the data
+    as well as available variables for analysis.  
 
 CSV files consist of 13 columns and thousands of observations in each
 file. When combined it would be over 5 million observations. Therefore,
 using R would be ideal to load each csv to dataframes and then combine
 all dataframes to a single dataframe.
 
-# Process
+# Process the data
 
 ## Load Packages
 
@@ -832,7 +836,7 @@ Now, the main dataframe *PositiveNoDupMergedData* is ready to be
 analyzed after removing duplicates, parsing, filtering, and transforming
 the raw dataframe.
 
-# Analyze
+# Analysis
 
 Since the main dataframe is large, a smaller chunk of the dataframe can
 be created using the *slice* function. The smaller dataframe can be used
@@ -867,6 +871,7 @@ ggplot(user_percentage_summary, aes(x = "", y = count, fill = member_casual)) +
 ```
 
 ![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
 It is clear that the highest number of rides were taken by user type
 members with a count of 3,658,586 rides. The number of casual rides were
 2,047,205.
@@ -887,6 +892,7 @@ ggplot(PositiveNoDupMergedData, aes(month, fill=member_casual)) +
 ```
 
 ![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
 It can be seen that the highest rides taken by the members was in August
 and the highest number of rides taken by casual user type was in July,
 From the above plot it can also be seen that there is a relation between
@@ -897,7 +903,7 @@ seasons as everyone celebrates holidays with Christmas and New year. It
 can also be due to the weather conditions during these months. To
 further explore the conditions, weather data can be analyzed in the
 particular areas of rides taken (But weather data is not included in the
-dataset).
+dataset). This is one of the important points of the analysis.
 
 ## Analysis by day of the week
 
@@ -910,12 +916,13 @@ PositiveNoDupMergedData$day_of_week <- factor(PositiveNoDupMergedData$day_of_wee
 
 ggplot(PositiveNoDupMergedData, aes(day_of_week, fill=member_casual)) +
   geom_bar(position="dodge", alpha=0.5) + 
-  labs(title = "Rides Preference by Day of Week (Mar 2023 - Feb 2024)") +
+  labs(title = "Rides by Day of Week (Mar 2023 - Feb 2024)") +
   scale_fill_discrete(name = "User Type") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 ![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
 It is evident that throughout all days of the week, members have the
 highest number of rides than casual riders. But looking at the trend of
 ride counts, rides taken by members are higher during weekdays compared
@@ -946,7 +953,17 @@ ggplot(count_by_hours_on_weekdays, aes(x = started_hour, y = count, group = memb
 
 ![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
+These charts shows a common pattern in all weekdays for both user types.
+The charts consist of two spikes. These spikes occur between 5AM to 9AM
+and between 3PM to 6PM. There is clearly a correlation between time of
+day and bike rides. This could be due to office hours, where people use
+bikes to travel to and from work as well as to do some workout before
+and right after work. This is one of the important points of the
+analysis.
+
 ### Bike type preference on weekdays
+
+Bike type preference can be analyzed as follows.
 
 ``` r
 bike_preference_weekdays <- PositiveNoDupMergedData %>%
@@ -967,7 +984,13 @@ ggplot(bike_preference_weekdays, aes(x = started_hour, y = count, group = rideab
 
 ![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
+The charts show that there is almost equal number of usage between
+classic bikes and electric bikes.
+
 ### Ride duration on weekdays
+
+The average ride duration time for each weekday can be analyzed as
+follows.
 
 ``` r
 ride_duration_weekdays <- PositiveNoDupMergedData %>%
@@ -980,7 +1003,7 @@ ggplot(ride_duration_weekdays, aes(day_of_week, avg_ride_duration, fill = member
   geom_bar(position = "dodge", alpha = 0.5, stat = "identity") + 
   labs(title = "Average ride duration by Day on Weekdays (Mar 2023 - Feb 2024)",
        x = "Day of the Week",
-       y = "Average Ride Duration") +
+       y = "Average Ride Duration (Minutes)") +
   scale_fill_manual(values = c("casual" = "red", "member" = "blue"), name = "User Type") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -988,9 +1011,13 @@ ggplot(ride_duration_weekdays, aes(day_of_week, avg_ride_duration, fill = member
 
 ![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
+The chart shows that ride duration for casual members are significantly
+higher than members throughout the weekdays. This is one of the
+important points of the analysis.
+
 ## Analysis of rides on weekends
 
-### Hour of day on weekends
+Performing the same analysis for weekends. \### Hour of day on weekends
 
 Getting the number of rides by hours on weekends
 
@@ -1011,6 +1038,11 @@ ggplot(count_by_hours_on_weekends, aes(x = started_hour, y = count, group = memb
 ```
 
 ![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+Bike usage by hour on weekends also shows a similar pattern for both
+user types But on weekends it shows a single spike of usage between
+hours 12 Noon to 4PM. This is one of the important points of the
+analysis.
 
 ### Bike type preference on weekends
 
@@ -1033,6 +1065,9 @@ ggplot(bike_preference_weekend, aes(x = started_hour, y = count, group = rideabl
 
 ![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
+As same as the usage on weekdays, the chart shows that there is almost
+equal number of usage between classic bikes and electric bikes.
+
 ### Ride duration on weekends
 
 ``` r
@@ -1046,7 +1081,7 @@ ggplot(ride_duration_weekend, aes(day_of_week, avg_ride_duration, fill = member_
   geom_bar(position = "dodge", alpha = 0.5, stat = "identity") + 
   labs(title = "Average ride duration by Day on weekends (Mar 2023 - Feb 2024)",
        x = "Day of the Week",
-       y = "Average Ride Duration") +
+       y = "Average Ride Duration (Minutes)") +
   scale_fill_manual(values = c("casual" = "red", "member" = "blue"), name = "User Type") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -1054,6 +1089,13 @@ ggplot(ride_duration_weekend, aes(day_of_week, avg_ride_duration, fill = member_
 
 ![](BikeShareAnalysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
-# Share
+Similar to the ride duration by user types on weekdays, weekend chart
+also shows that ride duration for casual members are significantly
+higher than members. This is also one of the important points of the
+analysis.
 
-# Act
+# Recommendations
+
+1.  recommendation 1  
+2.  recommendation 2  
+3.  recommendation 3  
