@@ -1094,8 +1094,32 @@ also shows that ride duration for casual members are significantly
 higher than members. This is also one of the important points of the
 analysis.
 
+# Key Findings
+
+1.  Increased bike usage is observed during the warmer months, typically
+    from May to September.  
+2.  Weekday peak bike usage spans from 5 AM to 9 AM and from 3 PM to 6
+    PM for both casual and annual member users.  
+3.  On weekends, peak bike usage occurs between 12 Noon to 4 PM for both
+    user types.  
+4.  Casual riders exhibit longer average ride durations on both weekdays
+    and weekends.  
+
 # Recommendations
 
-1.  recommendation 1  
-2.  recommendation 2  
-3.  recommendation 3  
+1.  Capitalize on the increased bike usage during the warmer months (May
+    to September) by offering seasonal promotions and discounts for
+    annual memberships.  
+2.  Focus marketing efforts during peak usage hours on weekdays and
+    weekends, emphasizing the convenience and cost-effectiveness of
+    annual memberships during these times.  
+3.  Introduce weekday-specific incentives or rewards for annual members
+    to encourage usage during peak weekday hours, such as discounted
+    rates or bonus ride credits.  
+4.  Improve user experience for annual members during peak hours by
+    ensuring availability of all bike types, optimizing station
+    locations, and offering additional amenities or services.  
+5.  Emphasize the advantages of longer ride durations for casual users,
+    such as exploring more of the city or enjoying leisurely rides, to
+    attract more individuals towards annual memberships. Offer rewards
+    or loyalty programs for consistent longer rides.  
